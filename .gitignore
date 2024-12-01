@@ -1,0 +1,15 @@
+# Ignore environment files
+.env
+.env.local
+.env.development
+.env.production
+
+# Ignore node_modules
+node_modules/
+
+# Ignore logs
+logs/
+*.log
+npm-debug.log*
+
+cocktail-app-80bf8-firebase-adminsdk-c521p-e782a30482.json
