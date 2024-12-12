@@ -51,7 +51,7 @@ axiosRetry(axios, {
 app.use(cors({
   origin: (origin, callback) => {
     const allowedOrigins = [
-      process.env.FRONTEND_URL,
+      process.env.FRONTEND_URL, 
       process.env.ALTERNATIVE_FRONTEND_URL, 
     ];
 
@@ -69,7 +69,7 @@ app.use(cors({
 app.use(express.json());
 
 const storage = multer.diskStorage({
-  destination: process.env.UPLOADS_PATH || './uploads/',
+  destination: '/var/data/uploads' || './uploads/',
   filename: (req, file, cb) => {
     cb(null, `${Date.now()}_${file.originalname}`);
   },
@@ -80,7 +80,7 @@ const upload = multer({
   limits: { fileSize: 10 * 1024 * 1024 },
 });
 
-app.use(`/${process.env.UPLOADS_PATH || 'uploads'}`, express.static(process.env.UPLOADS_PATH || 'uploads'));
+app.use(`/'uploads'}`, express.static('/var/data/uploads' || 'uploads'));
 
 app.post('/api/upload-image', upload.single('image'), (req, res) => {
   if (!req.file) {
