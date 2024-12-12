@@ -70,8 +70,11 @@ app.use(cors({
 
 app.use(express.json());
 
+
 const storage = multer.diskStorage({
-  destination: UPLOADS_PATH,
+  destination: (req, file, cb) => {
+    cb(null, UPLOADS_PATH); // Zdjęcia są zapisywane w Persistent Disk
+  },
   filename: (req, file, cb) => {
     cb(null, `${Date.now()}_${file.originalname}`);
   },
@@ -79,12 +82,14 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage });
 
+app.use('/uploads', express.static('/var/data/uploads'));
+
 
 app.post('/api/upload-image', upload.single('image'), (req, res) => {
   if (!req.file) {
     return res.status(400).json({ success: false, message: 'No file uploaded' });
   }
-  res.json({ success: true, imageUrl: `/var/data/uploads/${req.file.filename}` });
+  res.json({ success: true, imageUrl: `/uploads/${req.file.filename}` });
 });
 
 app.post('/api/community-cocktails', upload.single('image'), addCocktail);
