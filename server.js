@@ -29,6 +29,8 @@ const FRONTEND_URL = process.env.FRONTEND_URL;
 const cache = new NodeCache({ stdTTL: 3600 });
 const mongoURI = process.env.MONGO_URI;
 
+const UPLOADS_PATH = process.env.UPLOADS_PATH || '/persistent/uploads';
+
 const connectDB = async () => {
   try {
     await mongoose.connect(mongoURI);
@@ -69,7 +71,9 @@ app.use(cors({
 app.use(express.json());
 
 const storage = multer.diskStorage({
-  destination: '/var/data/uploads' || './uploads/',
+  destination: (req, file, cb) => {
+    cb(null, UPLOADS_PATH);
+  },
   filename: (req, file, cb) => {
     cb(null, `${Date.now()}_${file.originalname}`);
   },
@@ -80,7 +84,8 @@ const upload = multer({
   limits: { fileSize: 10 * 1024 * 1024 },
 });
 
-app.use(`/'uploads'}`, express.static('/var/data/uploads' || 'uploads'));
+app.use('/uploads', express.static(UPLOADS_PATH));
+
 
 app.post('/api/upload-image', upload.single('image'), (req, res) => {
   if (!req.file) {
