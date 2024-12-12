@@ -17,13 +17,16 @@ const getUserNameFromFirebase = async (userId) => {
 
 // Funkcja do dodawania nowego koktajlu społecznościowego
 export const addCocktail = async (req, res) => {
-  const { userId, name, ingredients, instructions } = req.body;
+  const { userId, name, instructions } = req.body;
   const uploadsPath = process.env.UPLOADS_PATH || './uploads'; // Dynamiczna ścieżka
   const image = req.file ? path.join(uploadsPath, req.file.filename) : null; // Pełna ścieżka do pliku
 
   try {
-    // Przekształcamy userId (e-mail) na nazwę przed `@`, zamiast wywoływać Firebase
-    const creator = userId.split('@')[0];
+    const ingredients = Array.isArray(req.body.ingredients)
+      ? req.body.ingredients
+      : JSON.parse(req.body.ingredients); // Sprawdzamy format składników
+
+    const creator = userId.split('@')[0]; // Wyciąganie nazwy użytkownika
 
     if (!image) {
       return res.status(400).json({ success: false, message: 'Image is required' });
@@ -32,7 +35,7 @@ export const addCocktail = async (req, res) => {
     const newCocktail = new Cocktail({
       userId,
       name,
-      ingredients: JSON.parse(ingredients),
+      ingredients,
       instructions,
       image,
       creator,
