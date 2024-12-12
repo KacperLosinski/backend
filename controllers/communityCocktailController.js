@@ -17,33 +17,29 @@ const getUserNameFromFirebase = async (userId) => {
 
 // Funkcja do dodawania nowego koktajlu społecznościowego
 export const addCocktail = async (req, res) => {
-  const { userId, name, ingredients, instructions } = req.body;
-  const uploadsPath = process.env.UPLOADS_PATH || './uploads';
-  const image = req.file ? path.join(uploadsPath, req.file.filename) : null;
+  const { userId, name, instructions } = req.body;
+  const ingredients = JSON.parse(req.body.ingredients);
+  const image = req.file ? `/uploads/${req.file.filename}` : null; // Ścieżka w Renderze
+
+  if (!image) {
+    return res.status(400).json({ message: 'Image is required' });
+  }
 
   try {
-    const creator = userId.split('@')[0];
-
-    if (!image) {
-      return res.status(400).json({ success: false, message: 'Image is required' });
-    }
-
     const newCocktail = new Cocktail({
       userId,
       name,
-      ingredients, // Używamy tego wprost
       instructions,
+      ingredients,
       image,
-      creator,
       comments: [],
       ratings: [],
     });
-
     await newCocktail.save();
-    res.status(201).json({ success: true, message: 'Cocktail added successfully!' });
+    res.status(201).json({ message: 'Cocktail added successfully', cocktail: newCocktail });
   } catch (error) {
     console.error('Error adding cocktail:', error);
-    res.status(500).json({ success: false, message: 'Failed to add cocktail' });
+    res.status(500).json({ message: 'Failed to add cocktail' });
   }
 };
 
