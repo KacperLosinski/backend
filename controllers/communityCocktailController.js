@@ -25,6 +25,12 @@ export const addCocktail = async (req, res) => {
     return res.status(400).json({ message: 'Image is required' });
   }
 
+  if (!userId) {
+    return res.status(400).json({ success: false, message: 'User ID is required' });
+  }
+
+  const creator = userId.split('@')[0];
+
   try {
     const newCocktail = new Cocktail({
       userId,
@@ -32,6 +38,7 @@ export const addCocktail = async (req, res) => {
       instructions,
       ingredients,
       image,
+      creator,
       comments: [],
       ratings: [],
     });
