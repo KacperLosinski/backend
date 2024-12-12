@@ -19,7 +19,7 @@ const getUserNameFromFirebase = async (userId) => {
 export const addCocktail = async (req, res) => {
   const { userId, name, instructions } = req.body;
   const ingredients = JSON.parse(req.body.ingredients);
-  const image = req.file ? `/uploads${req.file.filename}` : null; // Ścieżka w Renderze
+  const image = req.file ? `/uploads/${req.file.filename}` : null; // Ścieżka w Renderze
 
   if (!image) {
     return res.status(400).json({ message: 'Image is required' });
