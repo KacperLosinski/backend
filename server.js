@@ -29,7 +29,7 @@ const FRONTEND_URL = process.env.FRONTEND_URL;
 const cache = new NodeCache({ stdTTL: 3600 });
 const mongoURI = process.env.MONGO_URI;
 
-const UPLOADS_PATH = '/var/data/uploads'; // Ustawiona ścieżka w Renderze
+const UPLOADS_PATH = '/uploads'; // Ustawiona ścieżka w Renderze
 
 const connectDB = async () => {
   try {
@@ -82,7 +82,7 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage });
 
-app.use('/uploads', express.static('/uploads'));
+app.use('/uploads', express.static('/var/data/uploads'));
 
 
 app.post('/api/upload-image', upload.single('image'), (req, res) => {
