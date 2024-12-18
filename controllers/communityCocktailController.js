@@ -1,6 +1,7 @@
 import Cocktail from '../models/Cocktail.js';
 import admin from '../firebaseAdmin.js';
 import dotenv from 'dotenv';
+import path from 'path';
 
 dotenv.config();
 
@@ -16,36 +17,39 @@ const getUserNameFromFirebase = async (userId) => {
 
 // Funkcja do dodawania nowego koktajlu społecznościowego
 export const addCocktail = async (req, res) => {
-  const { userId, name, ingredients, instructions } = req.body;
-  const uploadsPath = process.env.UPLOADS_PATH || 'uploads'; // Dynamiczna ścieżka
-  const image = req.file ? `/${uploadsPath}/${req.file.filename}` : null;
+  const { userId, name, instructions } = req.body;
+  const ingredients = JSON.parse(req.body.ingredients);
+  const image = req.file ? `/uploads/${req.file.filename}` : null; // Ścieżka w Renderze
+
+  if (!image) {
+    return res.status(400).json({ message: 'Image is required' });
+  }
+
+  if (!userId) {
+    return res.status(400).json({ success: false, message: 'User ID is required' });
+  }
+
+  const creator = userId.split('@')[0];
 
   try {
-    // Przekształcamy userId (e-mail) na nazwę przed `@`, zamiast wywoływać Firebase
-    const creator = userId.split('@')[0];
-
-    if (!image) {
-      return res.status(400).json({ success: false, message: 'Image is required' });
-    }
-
     const newCocktail = new Cocktail({
       userId,
       name,
-      ingredients,
       instructions,
+      ingredients,
       image,
       creator,
       comments: [],
       ratings: [],
     });
-
     await newCocktail.save();
-    res.status(201).json({ success: true, message: 'Cocktail added successfully!' });
+    res.status(201).json({ message: 'Cocktail added successfully', cocktail: newCocktail });
   } catch (error) {
     console.error('Error adding cocktail:', error);
-    res.status(500).json({ success: false, message: 'Failed to add cocktail' });
+    res.status(500).json({ message: 'Failed to add cocktail' });
   }
 };
+
 
 // Funkcja do pobierania wszystkich koktajli społecznościowych
 export const getCommunityCocktails = async (req, res) => {
@@ -66,23 +70,15 @@ export const getCocktailDetails = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Cocktail not found' });
     }
 
-    // Oblicz średnią ocenę
     const averageRating =
       cocktail.ratings.length > 0
         ? cocktail.ratings.reduce((sum, rating) => sum + rating.score, 0) / cocktail.ratings.length
         : 0;
 
-    // Przekształć dokument Mongoose na obiekt JavaScript
     const cocktailData = cocktail.toObject();
-
-    // Dodaj średnią ocenę do obiektu koktajlu
     cocktailData.averageRating = averageRating;
 
-    // Zwróć dane w formacie oczekiwanym przez frontend
-    res.status(200).json({
-      success: true,
-      cocktail: cocktailData, // Użycie klucza "cocktail" jako obiektu głównego
-    });
+    res.status(200).json({ success: true, cocktail: cocktailData });
   } catch (error) {
     console.error('Error fetching cocktail details:', error);
     res.status(500).json({ success: false, message: 'Failed to fetch cocktail details' });
@@ -130,13 +126,9 @@ export const addRating = async (req, res) => {
     if (!cocktail)
       return res.status(404).json({ success: false, message: 'Cocktail not found' });
 
-    // Usuń wcześniejszą ocenę użytkownika, jeśli istnieje
     cocktail.ratings = cocktail.ratings.filter((rating) => rating.userId !== userId);
-
-    // Dodaj nową ocenę
     cocktail.ratings.push({ userId, score });
 
-    // Oblicz średnią ocenę
     const avgRating =
       cocktail.ratings.reduce((sum, rating) => sum + rating.score, 0) / cocktail.ratings.length;
 

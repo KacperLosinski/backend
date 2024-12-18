@@ -17,7 +17,7 @@ import Cocktail from './models/Cocktail.js';
 dotenv.config();
 
 // Sprawdzanie brakujących zmiennych środowiskowych
-if (!process.env.MONGO_URI || !process.env.API_URL || !process.env.PORT) {
+if (!process.env.MONGO_URI || !process.env.API_URL || !process.env.PORT || !process.env.FRONTEND_URL) {
   console.error('Error: Missing required environment variables.');
   process.exit(1);
 }
@@ -25,8 +25,11 @@ if (!process.env.MONGO_URI || !process.env.API_URL || !process.env.PORT) {
 const app = express();
 const PORT = process.env.PORT || 5000;
 const API_URL = process.env.API_URL;
+const FRONTEND_URL = process.env.FRONTEND_URL;
 const cache = new NodeCache({ stdTTL: 3600 });
 const mongoURI = process.env.MONGO_URI;
+
+const UPLOADS_PATH = '/var/data/uploads'; // Ustawiona ścieżka w Renderze
 
 const connectDB = async () => {
   try {
@@ -46,27 +49,40 @@ axiosRetry(axios, {
   retryCondition: (error) => error.response && error.response.status === 429,
 });
 
+// Zaktualizowana konfiguracja CORS obsługująca dynamiczny adres z env
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  origin: (origin, callback) => {
+    const allowedOrigins = [
+      process.env.FRONTEND_URL, 
+      process.env.ALTERNATIVE_FRONTEND_URL, 
+    ];
+
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      console.error(`Blocked by CORS: ${origin}`);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   methods: ['GET', 'POST', 'DELETE'],
+  credentials: true,
 }));
 
 app.use(express.json());
 
+
 const storage = multer.diskStorage({
-  destination: process.env.UPLOADS_PATH || './uploads/',
+  destination: (req, file, cb) => {
+    cb(null, UPLOADS_PATH); // Zdjęcia są zapisywane w Persistent Disk
+  },
   filename: (req, file, cb) => {
     cb(null, `${Date.now()}_${file.originalname}`);
   },
 });
 
-const upload = multer({
-  storage,
-  limits: { fileSize: 10 * 1024 * 1024 },
-});
+const upload = multer({ storage });
 
-app.use(`/${process.env.UPLOADS_PATH || 'uploads'}`, express.static(process.env.UPLOADS_PATH || 'uploads'));
-
+app.use('/uploads', express.static(UPLOADS_PATH));
 
 
 app.post('/api/upload-image', upload.single('image'), (req, res) => {
@@ -178,11 +194,9 @@ const getUserNameFromEmail = (email) => {
   return email.split('@')[0];
 };
 
-
 app.get('/api/community-cocktails/:id', async (req, res) => {
   const { id } = req.params;
 
-  // Check if ID is a valid MongoDB ObjectId
   if (!mongoose.Types.ObjectId.isValid(id)) {
     return res.status(400).json({ error: 'Invalid cocktail ID' });
   }
@@ -198,7 +212,6 @@ app.get('/api/community-cocktails/:id', async (req, res) => {
     res.status(500).json({ error: 'Server error fetching cocktail details' });
   }
 });
-
 
 app.post('/api/community-cocktails/:id/comment', async (req, res) => {
   const { id } = req.params;
