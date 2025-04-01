@@ -8,11 +8,11 @@ import multer from 'multer';
 import dotenv from 'dotenv';
 import path from 'path';
 import pLimit from 'p-limit';
-import { addCocktail, removeCocktail, getCommunityCocktails } from './controllers/communityCocktailController.js';
-import { addRating } from './controllers/communityCocktailController.js';
-import verifyAdmin from './verifyAdmin.js';
-import admin from './firebaseAdmin.js';
-import Cocktail from './models/Cocktail.js';
+import { addCocktail, removeCocktail, getCommunityCocktails } from '../controllers/communityCocktailController.js';
+import { addRating } from '../controllers/communityCocktailController.js';
+import verifyAdmin from '../verifyAdmin.js';
+import admin from '../firebaseAdmin.js';
+import Cocktail from '../models/Cocktail.js';
 
 dotenv.config();
 
@@ -23,7 +23,6 @@ if (!process.env.MONGO_URI || !process.env.API_URL || !process.env.PORT || !proc
 }
 
 const app = express();
-const PORT = process.env.PORT || 5000;
 const API_URL = process.env.API_URL;
 const FRONTEND_URL = process.env.FRONTEND_URL;
 const cache = new NodeCache({ stdTTL: 3600 });
@@ -263,6 +262,6 @@ app.use((err, req, res, next) => {
   res.status(500).send('Something went wrong!');
 });
 
-app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
-});
+import serverless from 'serverless-http';
+export const handler = serverless(app);
+
