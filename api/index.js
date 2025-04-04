@@ -101,8 +101,8 @@ app.use(async (req, res, next) => {
 //  res.json({ success: true, imageUrl: `/uploads/${req.file.filename}` });
 //});
 
-app.post('/api/community-cocktails', upload.single('image'), addCocktail);
-
+app.post('/api/community-cocktails', addCocktail);
+//app.post('/api/community-cocktails', upload.single('image'), addCocktail);
 app.get('/api/community-cocktails', getCommunityCocktails);
 
 app.delete('/api/community-cocktails/:id', verifyAdmin, removeCocktail);
