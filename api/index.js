@@ -4,9 +4,9 @@ import cors from 'cors';
 import NodeCache from 'node-cache';
 import axiosRetry from 'axios-retry';
 import mongoose from 'mongoose';
-import multer from 'multer';
+//import multer from 'multer';
 import dotenv from 'dotenv';
-import path from 'path';
+//import path from 'path';
 import pLimit from 'p-limit';
 import { addCocktail, removeCocktail, getCommunityCocktails } from '../controllers/communityCocktailController.js';
 import { addRating } from '../controllers/communityCocktailController.js';
@@ -29,7 +29,7 @@ const FRONTEND_URL = process.env.FRONTEND_URL;
 const cache = new NodeCache({ stdTTL: 3600 });
 const mongoURI = process.env.MONGO_URI;
 
-const UPLOADS_PATH = '/var/data/uploads'; // Ustawiona ścieżka w Renderze
+//const UPLOADS_PATH = '/var/data/uploads'; // Ustawiona ścieżka w Renderze
 
 let isConnected = false;
 
@@ -73,10 +73,7 @@ app.use(cors({
 
 app.use(express.json());
 
-app.use(async (req, res, next) => {
-  await connectDB();
-  next();
-});
+
 
 //
 
@@ -273,6 +270,17 @@ app.use((err, req, res, next) => {
 });
 
 import serverless from 'serverless-http';
-export default serverless(app);
+
+let handler;
+
+const setup = async () => {
+  await connectDB();
+  handler = serverless(app);
+};
+
+await setup();
+
+export default (req, res) => handler(req, res);
+
 
 
