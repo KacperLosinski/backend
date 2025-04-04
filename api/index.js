@@ -35,16 +35,17 @@ let isConnected = false;
 
 const connectDB = async () => {
   if (isConnected) return;
-
+  console.log('🔌 Connecting to MongoDB...');
   try {
     await mongoose.connect(mongoURI);
     isConnected = true;
-    console.log('MongoDB connected');
+    console.log('✅ MongoDB connected');
   } catch (error) {
-    console.error('Error connecting to MongoDB', error);
+    console.error('❌ MongoDB connection failed:', error);
     throw error;
   }
 };
+
 
 axiosRetry(axios, {
   retries: parseInt(process.env.AXIOS_RETRY_COUNT, 10) || 3,
@@ -274,9 +275,12 @@ import serverless from 'serverless-http';
 let handler;
 
 const setup = async () => {
+  console.log('⏳ Setting up...');
   await connectDB();
+  console.log('✅ DB connected');
   handler = serverless(app);
 };
+
 
 await setup();
 
