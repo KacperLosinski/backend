@@ -17,10 +17,11 @@ import Cocktail from '../models/Cocktail.js';
 dotenv.config();
 
 // Sprawdzanie brakujących zmiennych środowiskowych
-if (!process.env.MONGO_URI || !process.env.API_URL || !process.env.PORT || !process.env.FRONTEND_URL) {
+if (!process.env.MONGO_URI || !process.env.API_URL || !process.env.FRONTEND_URL) {
   console.error('Error: Missing required environment variables.');
   process.exit(1);
 }
+
 
 const app = express();
 const API_URL = process.env.API_URL;
