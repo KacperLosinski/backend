@@ -17,7 +17,7 @@ const cocktailSchema = new mongoose.Schema({
   name: { type: String, required: true },
   ingredients: [{ name: String, measure: String, imageUrl: String }],
   instructions: { type: String, required: true },
-  image: { type: String, required: true },
+  image: { type: String, required: false },  //true
   creator: { type: String, required: true },
   createdAt: { type: Date, default: Date.now },
   comments: [commentSchema],

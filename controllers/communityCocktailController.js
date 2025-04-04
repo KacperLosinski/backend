@@ -19,11 +19,18 @@ const getUserNameFromFirebase = async (userId) => {
 export const addCocktail = async (req, res) => {
   const { userId, name, instructions } = req.body;
   const ingredients = JSON.parse(req.body.ingredients);
-  const image = req.file ? `/uploads/${req.file.filename}` : null; // Ścieżka w Renderze
+  const image = req.body.image || null; // Możesz przesyłać link z frontendu
 
+  // Jeśli chcesz wymusić obecność obrazka (np. jako URL z frontu), zostaw to:
   if (!image) {
     return res.status(400).json({ message: 'Image is required' });
   }
+  
+  // ALBO jeśli chcesz dopuścić koktajle bez obrazka (np. tymczasowo), to zakomentuj:
+  /// if (!image) {
+  ///   return res.status(400).json({ message: 'Image is required' });
+  /// }
+  
 
   if (!userId) {
     return res.status(400).json({ success: false, message: 'User ID is required' });
