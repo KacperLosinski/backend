@@ -18,9 +18,9 @@ dotenv.config();
 
 // Sprawdzanie brakujących zmiennych środowiskowych
 if (!process.env.MONGO_URI || !process.env.API_URL || !process.env.FRONTEND_URL) {
-  console.error('Error: Missing required environment variables.');
-  process.exit(1);
+  throw new Error('Missing required environment variables');
 }
+
 
 
 const app = express();
@@ -31,17 +31,20 @@ const mongoURI = process.env.MONGO_URI;
 
 const UPLOADS_PATH = '/var/data/uploads'; // Ustawiona ścieżka w Renderze
 
+let isConnected = false;
+
 const connectDB = async () => {
+  if (isConnected) return;
+
   try {
     await mongoose.connect(mongoURI);
+    isConnected = true;
     console.log('MongoDB connected');
   } catch (error) {
     console.error('Error connecting to MongoDB', error);
-    process.exit(1);
+    throw error;
   }
 };
-
-connectDB();
 
 axiosRetry(axios, {
   retries: parseInt(process.env.AXIOS_RETRY_COUNT, 10) || 3,
@@ -70,27 +73,33 @@ app.use(cors({
 
 app.use(express.json());
 
-
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, UPLOADS_PATH); // Zdjęcia są zapisywane w Persistent Disk
-  },
-  filename: (req, file, cb) => {
-    cb(null, `${Date.now()}_${file.originalname}`);
-  },
+app.use(async (req, res, next) => {
+  await connectDB();
+  next();
 });
 
-const upload = multer({ storage });
+//
 
-app.use('/uploads', express.static(UPLOADS_PATH));
+//const storage = multer.diskStorage({
+ // destination: (req, file, cb) => {
+  //  cb(null, UPLOADS_PATH); // Zdjęcia są zapisywane w Persistent Disk
+  //},
+ // filename: (req, file, cb) => {
+ //   cb(null, `${Date.now()}_${file.originalname}`);
+ // },
+//});
+
+//const upload = multer({ storage });
+
+//app.use('/uploads', express.static(UPLOADS_PATH));
 
 
-app.post('/api/upload-image', upload.single('image'), (req, res) => {
-  if (!req.file) {
-    return res.status(400).json({ success: false, message: 'No file uploaded' });
-  }
-  res.json({ success: true, imageUrl: `/uploads/${req.file.filename}` });
-});
+//app.post('/api/upload-image', upload.single('image'), (req, res) => {
+ // if (!req.file) {
+ //   return res.status(400).json({ success: false, message: 'No file uploaded' });
+ // }
+//  res.json({ success: true, imageUrl: `/uploads/${req.file.filename}` });
+//});
 
 app.post('/api/community-cocktails', upload.single('image'), addCocktail);
 
