@@ -272,19 +272,23 @@ app.use((err, req, res, next) => {
 
 import serverless from 'serverless-http';
 
-let handler;
+let handlerPromise;
 
-const setup = async () => {
-  console.log('⏳ Setting up...');
-  await connectDB();
-  console.log('✅ DB connected');
-  handler = serverless(app);
+const getHandler = async () => {
+  if (!handlerPromise) {
+    console.log('⏳ Setting up...');
+    await connectDB();
+    console.log('✅ DB connected');
+    handlerPromise = serverless(app);
+  }
+  return handlerPromise;
 };
 
+export default async (req, res) => {
+  const handler = await getHandler();
+  return handler(req, res);
+};
 
-await setup();
-
-export default (req, res) => handler(req, res);
 
 
 
