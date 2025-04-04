@@ -264,5 +264,6 @@ app.use((err, req, res, next) => {
 });
 
 import serverless from 'serverless-http';
-export const handler = serverless(app);
+export default serverless(app);
+
 
